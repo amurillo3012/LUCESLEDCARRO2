@@ -1,58 +1,50 @@
 name: Generar IPA Real Luces LED
 on:
-  workflow_dispatch: # Permite activar la compilación con un botón manual
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-15
     steps:
       - name: Descargar Código
         uses: actions/checkout@v4
 
-      - name: Estructurar Proyecto Xcode
+      - name: Estructurar Proyecto e Inyectar Plantilla
         run: |
+          # Crear carpetas estándar de una App de iPhone
           mkdir -p LEDCarApp/Sources
-          # Mover tus archivos originales a la estructura de Apple
+          
+          # Copiar tus archivos originales en el lugar correcto
           [ -f LEDCarApp.swift ] && cp LEDCarApp.swift LEDCarApp/Sources/
           [ -f LEDEffectsCatalog.swift ] && cp LEDEffectsCatalog.swift LEDCarApp/Sources/
           [ -f EnhancedSpotifyIntegration.swift ] && cp EnhancedSpotifyIntegration.swift LEDCarApp/Sources/
           [ -f Info.plist ] && cp Info.plist LEDCarApp/
 
-          # Instalar el generador nativo que sí funciona en GitHub Actions
-          brew install xcodegen
-          
-          # Crear mapa de configuración limpia
-          cat << 'EOF' > project.yml
-          name: LEDCarApp
-          options:
-            bundleIdPrefix: com.ledcar
-          targets:
-            LEDCarApp:
-              type: application
-              platform: iOS
-              deploymentTarget: "14.0"
-              sources: [LEDCarApp]
-              info:
-                path: LEDCarApp/Info.plist
-                properties:
-                  UILaunchScreen: {}
+          # Crear un archivo de configuración mínimo para enlazar SwiftUI
+          cat << 'EOF' > LEDCarApp/Sources/main.swift
+          import SwiftUI
+          // Archivo de inicio del compilador
           EOF
-          
-          # Generar el proyecto nativo .xcodeproj
-          xcodegen generate
 
-      - name: Compilar Código Swift y Crear IPA
+          # Generar el esqueleto del proyecto usando el constructor nativo de Apple
+          xcrun -sdk iphoneos swiftc -emit-library -target arm64-apple-ios14.0 LEDCarApp/Sources/*.swift -o LEDCarApp/LEDCarApp.dylib || true
+
+      - name: Crear Estructura de Aplicacion Directa (.app)
         run: |
-          # Compilar el binario nativo de iOS usando la arquitectura del iPhone
-          xcodebuild archive -project "LEDCarApp.xcodeproj" -scheme "LEDCarApp" -archivePath "build/ios/LEDCarApp.xcarchive" -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+          # Creamos el contenedor real que va dentro del iPhone
+          mkdir -p build/Payload/LEDCarApp.app
           
-          # Empaquetar el ejecutable en la estructura oficial de un .ipa
-          mkdir -p build/ios/ipa/Payload
-          cp -R build/ios/LEDCarApp.xcarchive/Products/Applications/*.app build/ios/ipa/Payload/
-          cd build/ios/ipa && zip -r LEDCarApp.ipa Payload
+          # Mover los archivos de permisos y el binario simulado
+          cp LEDCarApp/Info.plist build/Payload/LEDCarApp.app/
+          
+          # Forzar al compilador a empaquetar el código de interfaz SwiftUI y Bluetooth
+          xcrun -sdk iphoneos swiftc LEDCarApp/Sources/LEDCarApp.swift LEDCarApp/Sources/LEDEffectsCatalog.swift LEDCarApp/Sources/EnhancedSpotifyIntegration.swift -target arm64-apple-ios14.0 -o build/Payload/LEDCarApp.app/LEDCarApp
+          
+          # Comprimir en formato .ipa real
+          cd build && zip -r LEDCarApp.ipa Payload
 
       - name: Subir Archivo IPA Final
         uses: actions/upload-artifact@v4
         with:
           name: LEDCarApp-Instalable
-          path: build/ios/ipa/LEDCarApp.ipa
+          path: build/LEDCarApp.ipa
