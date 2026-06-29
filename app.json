@@ -3,6 +3,7 @@
     "name": "LEDCarApp",
     "slug": "ledcarmia",
     "version": "1.0.0",
+    "owner": "amurillo3012s-organization",
     "extra": {
       "eas": {
         "projectId": "2a3ebd04-086a-4075-ae2a-17d2a517557a"
