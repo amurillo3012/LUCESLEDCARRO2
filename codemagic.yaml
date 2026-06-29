@@ -1,0 +1,34 @@
+workflows:
+  ios-app:
+    name: LED Car App Build
+    max_build_duration: 30
+    instance_type: mac_mini_m1
+    environment:
+      ios_signing:
+        distribution_type: ad_hoc
+        bundle_identifier: com.miusuario.ledcarapp
+      xcode: latest
+    scripts:
+      - name: Estructurar Archivos para Xcode
+        script: |
+          mkdir -p LEDCarApp
+          mv LEDCarApp.swift LEDCarApp/
+          mv LEDEffectsCatalog.swift LEDCarApp/
+          mv EnhancedSpotifyIntegration.swift LEDCarApp/
+          mv Info.plist LEDCarApp/
+          
+          # Script automático que crea el esqueleto del proyecto sin que tengas una Mac
+          pip install mod_pbxproj
+          python3 -c "
+          import os
+          os.system('xcodegen generate || echo \"Instalando herramientas auxiliares...\"')
+          "
+      - name: Compilar App
+        script: |
+          xcodebuild archive -project "LEDCarApp.xcodeproj" -scheme "LEDCarApp" -archivePath "build/ios/LEDCarApp.xcarchive" CODE_SIGNING_ALLOWED=NO
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      email:
+        recipients:
+          - amurillo3012@gmail.com
