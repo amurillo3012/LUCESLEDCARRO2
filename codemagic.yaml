@@ -8,20 +8,20 @@ workflows:
     scripts:
       - name: Instalar XcodeGen en el Servidor
         script: |
-          # Instalar la herramienta para generar el proyecto nativo de Apple
+          # Esto soluciona el error 'command not found: xcodegen' de la foto
+          echo "Instalando herramienta de empaquetado..."
           brew install xcodegen
       - name: Generar Proyecto Estructurado Xcode
         script: |
-          # 1. Crear la estructura nativa que pide Apple para el código fuente
           mkdir -p LEDCarApp/Sources
           
-          # 2. Mover tus archivos de código a la ubicación correcta
+          # Mover tus archivos a las carpetas del servidor
           [ -f LEDCarApp.swift ] && cp LEDCarApp.swift LEDCarApp/Sources/
           [ -f LEDEffectsCatalog.swift ] && cp LEDEffectsCatalog.swift LEDCarApp/Sources/
           [ -f EnhancedSpotifyIntegration.swift ] && cp EnhancedSpotifyIntegration.swift LEDCarApp/Sources/
           [ -f Info.plist ] && cp Info.plist LEDCarApp/
           
-          # 3. Crear el mapa de configuración para XcodeGen
+          # Crear mapa de compilación
           cat << 'EOF' > project.yml
           name: LEDCarApp
           options:
@@ -38,14 +38,12 @@ workflows:
                   UILaunchScreen: {}
           EOF
           
-          # 4. Construir el archivo .xcodeproj real
+          # Ejecutar el comando que antes fallaba
           xcodegen generate
       - name: Compilar Binario y Crear IPA Real
         script: |
-          # Compilar la arquitectura de la app omitiendo firmas del portal de desarrollo en la nube
           xcodebuild archive -project "LEDCarApp.xcodeproj" -scheme "LEDCarApp" -archivePath "build/ios/LEDCarApp.xcarchive" -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
           
-          # Crear la estructura oficial del contenedor .ipa
           mkdir -p build/ios/ipa/Payload
           cp -R build/ios/LEDCarApp.xcarchive/Products/Applications/*.app build/ios/ipa/Payload/
           cd build/ios/ipa && zip -r LEDCarApp.ipa Payload
