@@ -6,44 +6,122 @@ workflows:
     environment:
       xcode: latest
     scripts:
-      - name: Instalar XcodeGen en el Servidor
+      - name: Crear Proyecto Estructurado para Xcode
         script: |
-          # Esto soluciona el error 'command not found: xcodegen' de la foto
-          echo "Instalando herramienta de empaquetado..."
-          brew install xcodegen
-      - name: Generar Proyecto Estructurado Xcode
-        script: |
-          mkdir -p LEDCarApp/Sources
+          echo "Creando estructura oficial de Apple..."
+          mkdir -p LEDCarApp
           
-          # Mover tus archivos a las carpetas del servidor
-          [ -f LEDCarApp.swift ] && cp LEDCarApp.swift LEDCarApp/Sources/
-          [ -f LEDEffectsCatalog.swift ] && cp LEDEffectsCatalog.swift LEDCarApp/Sources/
-          [ -f EnhancedSpotifyIntegration.swift ] && cp EnhancedSpotifyIntegration.swift LEDCarApp/Sources/
+          # Mover tus archivos originales a la carpeta de compilación
+          [ -f LEDCarApp.swift ] && cp LEDCarApp.swift LEDCarApp/
+          [ -f LEDEffectsCatalog.swift ] && cp LEDEffectsCatalog.swift LEDCarApp/
+          [ -f EnhancedSpotifyIntegration.swift ] && cp EnhancedSpotifyIntegration.swift LEDCarApp/
           [ -f Info.plist ] && cp Info.plist LEDCarApp/
           
-          # Crear mapa de compilación
-          cat << 'EOF' > project.yml
-          name: LEDCarApp
-          options:
-            bundleIdPrefix: com.ledcar
-          targets:
-            LEDCarApp:
-              type: application
-              platform: iOS
-              deploymentTarget: "14.0"
-              sources: [LEDCarApp]
-              info:
-                path: LEDCarApp/Info.plist
-                properties:
-                  UILaunchScreen: {}
+          # Fabricar el archivo del proyecto (.xcodeproj) directamente en texto plano
+          # Esto le dice a la Mac Mini de Codemagic que use las librerías nativas de iPhone (SwiftUI, Bluetooth)
+          mkdir -p LEDCarApp.xcodeproj
+          cat << 'EOF' > LEDCarApp.xcodeproj/project.pbxproj
+          // !$*UTF8*$!
+          {
+              archiveVersion = 1;
+              classes = { };
+              objectVersion = 54;
+              objects = {
+                  1A1B1C1D1E1F1G1H1I1J1K1L /* Project object */ = {
+                      isa = PBXProject;
+                      attributes = { LastUpgradeCheck = 1300; };
+                      buildConfigurationList = 2A2B2C2D2E2F2G2H2I2J2K2L /* Build configuration list for PBXProject */;
+                      compatibilityVersion = "Xcode 13.0";
+                      developmentRegion = en;
+                      hasScannedForEncodings = 0;
+                      knownRegions = ( en, Base );
+                      mainGroup = 3A3B3C3D3E3F3G3H3I3J3K3L /* Main Group */;
+                      productRefGroup = 4A4B4C4D4E4F4G4H4I4J4K4L /* Products */;
+                      projectDirPath = "";
+                      projectRoot = "";
+                      targets = ( 5A5B5C5D5E5F5G5H5I5J5K5L /* LEDCarApp */ );
+                  };
+                  2A2B2C2D2E2F2G2H2I2J2K2L /* Build configuration list for PBXProject */ = {
+                      isa = XCConfigurationList;
+                      buildConfigurations = ( 2A1 /* Release */ );
+                      defaultConfigurationIsVisible = 0;
+                      defaultConfigurationName = Release;
+                  };
+                  2A1 /* Release */ = {
+                      isa = XCBuildConfiguration;
+                      buildSettings = {
+                          PRODUCT_NAME = LEDCarApp;
+                          SDKROOT = iphoneos;
+                          SUPPORTED_PLATFORMS = iphoneos;
+                          TARGETED_DEVICE_FAMILY = "1";
+                      };
+                      name = Release;
+                  };
+                  3A3B3C3D3E3F3G3H3I3J3K3L /* Main Group */ = {
+                      isa = PBXGroup;
+                      children = ( 4A4B4C4D4E4F4G4H4I4J4K4L /* Products */, LEDCarApp /* LEDCarApp */ );
+                      sourceTree = "<group>";
+                  };
+                  LEDCarApp /* LEDCarApp */ = {
+                      isa = PBXGroup;
+                      children = ( LEDCarApp.swift /* LEDCarApp.swift */, LEDEffectsCatalog.swift /* LEDEffectsCatalog.swift */, EnhancedSpotifyIntegration.swift /* EnhancedSpotifyIntegration.swift */, Info.plist /* Info.plist */ );
+                      path = LEDCarApp;
+                      sourceTree = "<group>";
+                  };
+                  4A4B4C4D4E4F4G4H4I4J4K4L /* Products */ = {
+                      isa = PBXGroup;
+                      children = ( );
+                      sourceTree = "<group>";
+                  };
+                  5A5B5C5D5E5F5G5H5I5J5K5L /* LEDCarApp */ = {
+                      isa = PBXNativeTarget;
+                      buildConfigurationList = 6A6B6C6D6E6F6G6H6I6J6K6L /* Build configuration list */;
+                      buildPhases = ( 7A1 /* Sources */ );
+                      buildRules = ( );
+                      dependencies = ( );
+                      name = LEDCarApp;
+                      productName = LEDCarApp;
+                      productType = "com.apple.product-type.application";
+                  };
+                  6A6B6C6D6E6F6G6H6I6J6K6L /* Build configuration list */ = {
+                      isa = XCConfigurationList;
+                      buildConfigurations = ( 6A1 /* Release */ );
+                      defaultConfigurationIsVisible = 0;
+                      defaultConfigurationName = Release;
+                  };
+                  6A1 /* Release */ = {
+                      isa = XCBuildConfiguration;
+                      buildSettings = {
+                          INFOPLIST_FILE = LEDCarApp/Info.plist;
+                          PRODUCT_BUNDLE_IDENTIFIER = com.ledcar.LEDCarApp;
+                          PRODUCT_NAME = LEDCarApp;
+                          IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+                      };
+                      name = Release;
+                  };
+                  7A1 /* Sources */ = {
+                      isa = PBXSourcesBuildPhase;
+                      buildActionMask = 2147483647;
+                      files = ( 8A1 /* LEDCarApp.swift */, 8A2 /* LEDEffectsCatalog.swift */, 8A3 /* EnhancedSpotifyIntegration.swift */ );
+                      runOnlyForDeploymentPostprocessing = 0;
+                  };
+                  LEDCarApp.swift /* LEDCarApp.swift */ = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LEDCarApp.swift; sourceTree = "<group>"; };
+                  LEDEffectsCatalog.swift /* LEDEffectsCatalog.swift */ = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LEDEffectsCatalog.swift; sourceTree = "<group>"; };
+                  EnhancedSpotifyIntegration.swift /* EnhancedSpotifyIntegration.swift */ = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnhancedSpotifyIntegration.swift; sourceTree = "<group>"; };
+                  Info.plist /* Info.plist */ = { isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+                  8A1 /* LEDCarApp.swift */ = { isa = PBXBuildFile; fileRef = LEDCarApp.swift /* LEDCarApp.swift */; };
+                  8A2 /* LEDEffectsCatalog.swift */ = { isa = PBXBuildFile; fileRef = LEDEffectsCatalog.swift /* LEDEffectsCatalog.swift */; };
+                  8A3 /* EnhancedSpotifyIntegration.swift */ = { isa = PBXBuildFile; fileRef = EnhancedSpotifyIntegration.swift /* EnhancedSpotifyIntegration.swift */; };
+              };
+              rootObject = 1A1B1C1D1E1F1G1H1I1J1K1L /* Project object */;
+          }
           EOF
-          
-          # Ejecutar el comando que antes fallaba
-          xcodegen generate
-      - name: Compilar Binario y Crear IPA Real
+      - name: Compilar App con Xcode Oficial
         script: |
+          # Compilamos usando la herramienta de Apple oficial para apps móviles
           xcodebuild archive -project "LEDCarApp.xcodeproj" -scheme "LEDCarApp" -archivePath "build/ios/LEDCarApp.xcarchive" -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
           
+          # Guardar el binario empaquetado en el archivo .ipa real
           mkdir -p build/ios/ipa/Payload
           cp -R build/ios/LEDCarApp.xcarchive/Products/Applications/*.app build/ios/ipa/Payload/
           cd build/ios/ipa && zip -r LEDCarApp.ipa Payload
