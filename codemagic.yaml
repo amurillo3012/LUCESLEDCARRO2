@@ -1,27 +1,49 @@
 workflows:
   ios-app:
-    name: LED Car App Build
+    name: LED Car App Real Build
     max_build_duration: 30
     instance_type: mac_mini_m1
     environment:
       xcode: latest
     scripts:
-      - name: Estructurar Archivos para Xcode
+      - name: Instalar Generador de Proyectos
         script: |
-          mkdir -p LEDCarApp
-          [ -f LEDCarApp.swift ] && mv LEDCarApp.swift LEDCarApp/
-          [ -f LEDEffectsCatalog.swift ] && mv LEDEffectsCatalog.swift LEDCarApp/
-          [ -f EnhancedSpotifyIntegration.swift ] && mv EnhancedSpotifyIntegration.swift LEDCarApp/
-          [ -f Info.plist ] && mv Info.plist LEDCarApp/
-          
-          # Generar proyecto Xcode falso en el servidor para saltar restricciones
-          pip install mod_pbxproj
-      - name: Compilar App sin Restricciones de Apple
+          brew install xcodegen
+      - name: Estructurar Archivos y Configurar Proyecto
         script: |
-          # Compilación limpia omitiendo la firma digital en la nube
-          xcodebuild archive -project "LEDCarApp.xcodeproj" -scheme "LEDCarApp" -archivePath "build/ios/LEDCarApp.xcarchive" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+          mkdir -p LEDCarApp/Sources
           
-          # Forzar la creación del archivo .app instalable
+          # Mover los archivos de código a la estructura nativa de Apple
+          [ -f LEDCarApp.swift ] && cp LEDCarApp.swift LEDCarApp/Sources/
+          [ -f LEDEffectsCatalog.swift ] && cp LEDEffectsCatalog.swift LEDCarApp/Sources/
+          [ -f EnhancedSpotifyIntegration.swift ] && cp EnhancedSpotifyIntegration.swift LEDCarApp/Sources/
+          [ -f Info.plist ] && cp Info.plist LEDCarApp/
+          
+          # Crear el archivo de definición del proyecto requerido por XcodeGen
+          cat << 'EOF' > project.yml
+          name: LEDCarApp
+          options:
+            bundleIdPrefix: com.ledcar
+          targets:
+            LEDCarApp:
+              type: application
+              platform: iOS
+              deploymentTarget: "14.0"
+              sources: [LEDCarApp]
+              info:
+                path: LEDCarApp/Info.plist
+                properties:
+                  UILaunchScreen: {}
+          EOF
+          
+          # Ejecutar el generador para construir el archivo .xcodeproj real en el servidor
+          xcodegen generate
+      - name: Compilar Binario y Crear Archivo IPA
+        script: |
+          # Compilación nativa de la arquitectura iOS sin requerir firmas del portal de desarrolladores
+          xcodebuild archive -project "LEDCarApp.xcodeproj" -scheme "LEDCarApp" -archivePath "build/ios/LEDCarApp.xcarchive" -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+          
+          # Empaquetado manual de la estructura de la aplicación en el contenedor .ipa
           mkdir -p build/ios/ipa/Payload
           cp -R build/ios/LEDCarApp.xcarchive/Products/Applications/*.app build/ios/ipa/Payload/
           cd build/ios/ipa && zip -r LEDCarApp.ipa Payload
