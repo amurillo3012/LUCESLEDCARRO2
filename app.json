@@ -1,10 +1,19 @@
 {
   "expo": {
     "name": "LEDCarApp",
-    "slug": "led-car-app",
+    "slug": "ledcarmia",
     "version": "1.0.0",
+    "extra": {
+      "eas": {
+        "projectId": "2a3ebd04-086a-4075-ae2a-17d2a517557a"
+      }
+    },
     "ios": {
-      "bundleIdentifier": "com.ledcar.LEDCarApp"
+      "bundleIdentifier": "com.ledcar.LEDCarApp",
+      "infoPlist": {
+        "NSBluetoothAlwaysUsageDescription": "Necesitamos acceso al Bluetooth para conectarnos a las luces LED del carro.",
+        "NSLocalNetworkUsageDescription": "Necesitamos acceso a la red local para la sincronización de Spotify."
+      }
     }
   }
 }
