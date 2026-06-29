@@ -4,10 +4,8 @@
   },
   "build": {
     "development": {
-      "distribution": "internal",
       "ios": {
-        "simulator": false,
-        "enterpriseProvisioning": "adhoc"
+        "simulator": true
       }
     }
   }
