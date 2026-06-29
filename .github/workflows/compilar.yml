@@ -1,0 +1,58 @@
+name: Generar IPA Real Luces LED
+on:
+  workflow_dispatch: # Permite activar la compilación con un botón manual
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Descargar Código
+        uses: actions/checkout@v4
+
+      - name: Estructurar Proyecto Xcode
+        run: |
+          mkdir -p LEDCarApp/Sources
+          # Mover tus archivos originales a la estructura de Apple
+          [ -f LEDCarApp.swift ] && cp LEDCarApp.swift LEDCarApp/Sources/
+          [ -f LEDEffectsCatalog.swift ] && cp LEDEffectsCatalog.swift LEDCarApp/Sources/
+          [ -f EnhancedSpotifyIntegration.swift ] && cp EnhancedSpotifyIntegration.swift LEDCarApp/Sources/
+          [ -f Info.plist ] && cp Info.plist LEDCarApp/
+
+          # Instalar el generador nativo que sí funciona en GitHub Actions
+          brew install xcodegen
+          
+          # Crear mapa de configuración limpia
+          cat << 'EOF' > project.yml
+          name: LEDCarApp
+          options:
+            bundleIdPrefix: com.ledcar
+          targets:
+            LEDCarApp:
+              type: application
+              platform: iOS
+              deploymentTarget: "14.0"
+              sources: [LEDCarApp]
+              info:
+                path: LEDCarApp/Info.plist
+                properties:
+                  UILaunchScreen: {}
+          EOF
+          
+          # Generar el proyecto nativo .xcodeproj
+          xcodegen generate
+
+      - name: Compilar Código Swift y Crear IPA
+        run: |
+          # Compilar el binario nativo de iOS usando la arquitectura del iPhone
+          xcodebuild archive -project "LEDCarApp.xcodeproj" -scheme "LEDCarApp" -archivePath "build/ios/LEDCarApp.xcarchive" -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+          
+          # Empaquetar el ejecutable en la estructura oficial de un .ipa
+          mkdir -p build/ios/ipa/Payload
+          cp -R build/ios/LEDCarApp.xcarchive/Products/Applications/*.app build/ios/ipa/Payload/
+          cd build/ios/ipa && zip -r LEDCarApp.ipa Payload
+
+      - name: Subir Archivo IPA Final
+        uses: actions/upload-artifact@v4
+        with:
+          name: LEDCarApp-Instalable
+          path: build/ios/ipa/LEDCarApp.ipa
